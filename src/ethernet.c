@@ -11,6 +11,20 @@
 void ethernet_in(buf_t *buf)
 {
     // TO-DO
+    if (buf->len < sizeof(ether_hdr_t))
+    {
+        // fucked
+    }
+    else
+    {
+        ether_hdr_t *hdr = (ether_hdr_t *)buf->data;
+        uint8_t mac[NET_MAC_LEN];
+        uint16_t protocol;
+        memcpy(mac, hdr->src, NET_MAC_LEN);
+        protocol = swap16(hdr->protocol16);
+        buf_remove_header(buf, sizeof(ether_hdr_t));
+        net_in(buf, protocol, mac);
+    }
 }
 /**
  * @brief 处理一个要发送的数据包
@@ -22,6 +36,22 @@ void ethernet_in(buf_t *buf)
 void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol)
 {
     // TO-DO
+    if (buf->len < ETHERNET_MIN_TRANSPORT_UNIT)
+    {
+        buf_add_padding(buf, ETHERNET_MIN_TRANSPORT_UNIT - buf->len);
+    }
+    buf_add_header(buf, sizeof(ether_hdr_t));
+    ether_hdr_t *hdr = (ether_hdr_t *)buf->data;
+    memcpy(hdr->src, net_if_mac, NET_MAC_LEN);
+    memcpy(hdr->dst, mac, NET_MAC_LEN);
+    hdr->protocol16 = swap16(protocol);
+    printf("发送数据包如下：\n");
+    for (int i = 0; i < buf->len; i++)
+    {
+            printf("%02x ", (int)buf->data[i]);
+            if (i%16==15||i==buf->len-1) printf("\n");
+    }
+    driver_send(buf);
 }
 /**
  * @brief 初始化以太网协议
