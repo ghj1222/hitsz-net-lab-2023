@@ -45,12 +45,14 @@ void ethernet_out(buf_t *buf, const uint8_t *mac, net_protocol_t protocol)
     memcpy(hdr->src, net_if_mac, NET_MAC_LEN);
     memcpy(hdr->dst, mac, NET_MAC_LEN);
     hdr->protocol16 = swap16(protocol);
+    /*
     printf("发送数据包如下：\n");
     for (int i = 0; i < buf->len; i++)
     {
             printf("%02x ", (int)buf->data[i]);
             if (i%16==15||i==buf->len-1) printf("\n");
     }
+    */
     driver_send(buf);
 }
 /**
