@@ -60,14 +60,10 @@ void icmp_in(buf_t *buf, uint8_t *src_ip)
  */
 void icmp_unreachable(buf_t *recv_buf, uint8_t *src_ip, icmp_code_t code)
 {
-    printf("send icmp unreachable!\n");
     buf_t fuck;
-
     uint8_t *data = recv_buf->data;
     int len = ((ip_hdr_t*)(recv_buf->data))->hdr_len;
-    printf("your len=%d\n", len);
     len=len*4+8;
-    printf("your len=%d\n", len);
     buf_init(&fuck, len);
     memcpy(fuck.data, data, len);
     buf_add_header(&fuck, sizeof(icmp_hdr_t));
