@@ -79,9 +79,6 @@ void ip_fragment_out(buf_t *buf, uint8_t *ip, net_protocol_t protocol, int id, u
  */
 void ip_out(buf_t *buf, uint8_t *ip, net_protocol_t protocol)
 {
-    printf("*******************\n");
-    printf("IP层发送长度：%d\n", (int)buf->len);
-    printf("*******************\n");
     int default_len = (1500-sizeof(ip_hdr_t))/8*8;
     static int id = 0;
     buf_t tmp;

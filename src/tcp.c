@@ -184,7 +184,7 @@ static uint16_t tcp_write_to_buf(tcp_connect_t* connect, buf_t* buf) {
  */
 static void tcp_send(buf_t* buf, tcp_connect_t* connect, tcp_flags_t flags) {
     // printf("<< tcp send >> sz=%zu\n", buf->len);
-    display_flags(flags);
+    //display_flags(flags);
     size_t prev_len = buf->len;
     buf_add_header(buf, sizeof(tcp_hdr_t));
     tcp_hdr_t* hdr = (tcp_hdr_t*)buf->data;
@@ -280,7 +280,7 @@ size_t tcp_connect_write(tcp_connect_t* connect, const uint8_t* data, size_t len
  * @param src_ip
  */
 void tcp_in(buf_t* buf, uint8_t* src_ip) {
-    printf("<<< tcp_in >>>\n");
+//    printf("<<< tcp_in >>>\n");
 //    1、大小检查，检查buf长度是否小于tcp头部，如果是，则丢弃
    if (buf->len < sizeof(tcp_hdr_t)) return;
    tcp_hdr_t *hdr = (tcp_hdr_t*)buf->data;
@@ -302,7 +302,7 @@ void tcp_in(buf_t* buf, uint8_t* src_ip) {
     uint16_t window = swap16(hdr->window_size16);
     size_t hdr_len = 4*(uint16_t)hdr->data_offset;
     size_t data_len = buf->len - hdr_len;
-    printf("[TCP_IN]%0u->%5u,Seq=%u,Ack=%u,Win=%u,Len=%lu\n", src_port, dest_port, seq_number, ack_number, window, data_len);
+//    printf("[TCP_IN]%0u->%5u,Seq=%u,Ack=%u,Win=%u,Len=%lu\n", src_port, dest_port, seq_number, ack_number, window, data_len);
     tcp_flags_t flags = hdr->flags;
 
 
@@ -480,7 +480,7 @@ void tcp_in(buf_t* buf, uint8_t* src_ip) {
             }
             else
             {
-                if (data_len > 0) (*handler)(connect, TCP_ESTABLISHED);
+                if (data_len > 0) (*handler)(connect, TCP_CONN_DATA_RECV);
                 uint16_t len = tcp_write_to_buf(connect, &fuck);
                 if (data_len > 0 || len > 0)
                 {

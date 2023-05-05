@@ -63,6 +63,7 @@ static size_t get_line(tcp_connect_t* tcp, char* buf, size_t size) {
     return i;
 }
 
+/*
 static size_t http_send(tcp_connect_t* tcp, const char* buf, size_t size) {
     size_t send = 0;
     while (send < size) {
@@ -71,6 +72,7 @@ static size_t http_send(tcp_connect_t* tcp, const char* buf, size_t size) {
     }
     return send;
 }
+*/
 
 static void close_http(tcp_connect_t* tcp) {
     tcp_connect_close(tcp);
@@ -80,8 +82,8 @@ static void close_http(tcp_connect_t* tcp) {
 
 
 static void send_file(tcp_connect_t* tcp, const char* url) {
-    FILE* file;
-    uint32_t size;
+    //FILE* file;
+    //uint32_t size;
     // const char* content_type = "text/html";
     char file_path[255];
     char tx_buffer[1024];
@@ -96,6 +98,34 @@ static void send_file(tcp_connect_t* tcp, const char* url) {
 
    // TODO
 
+//    printf("url=[%s]\n", url);
+    sprintf(file_path, "%s%s", XHTTP_DOC_DIR, url);
+    FILE *fp = fopen(file_path, "rb");
+    if (fp == NULL)
+    {
+        sprintf(tx_buffer, "HTTP/1.0 404 Not Found\n\n"
+        "<html><head>" // 模仿一下Apache的404页面
+"<title>404 Not Found</title>"
+"</head><body>"
+"<h1>Not Found</h1>"
+"<p>The requested URL %s was not found on this server.</p>" // 可能会导致缓冲区溢出攻击
+"</body></html>"
+        ,url);
+        tcp_connect_write(tcp, (uint8_t*)tx_buffer, strlen(tx_buffer));
+    }
+    else
+    {
+        tcp_connect_write(tcp, (const uint8_t*)"HTTP/1.0 200 OK\n\n", 17);
+        size_t tmp;
+        while ((tmp = fread(tx_buffer, 1, 1024, fp)) > 0)
+        {
+            net_poll();
+            tcp_connect_write(tcp, (uint8_t*)tx_buffer, tmp);
+        }
+        fclose(fp);
+    }
+    net_poll();
+//    tcp_connect_write(tcp, "HTTP/1.0 200 OK\n\n<h1>fuck!</h1>\n", 32);
 }
 
 static void http_handler(tcp_connect_t* tcp, connect_state_t state) {
@@ -129,8 +159,8 @@ void http_server_run(void) {
     char rx_buffer[1024];
 
     while ((tcp = http_fifo_out(&http_fifo_v)) != NULL) {
-        int i;
-        char* c = rx_buffer;
+        // int i;
+        // char* c = rx_buffer;
 
 
         /*
@@ -138,7 +168,13 @@ void http_server_run(void) {
         */
 
        // TODO
-
+       
+        size_t len = get_line(tcp, rx_buffer, 1023);
+        if (len == 0)
+        {
+            close_http(tcp);
+            continue;
+        }
 
         /*
         2、检查是否有GET请求，如果没有，则调用close_http关闭tcp，并继续循环
@@ -146,12 +182,22 @@ void http_server_run(void) {
 
        // TODO
 
+        if (memcmp(rx_buffer, "GET", 3) != 0)
+        {
+            close_http(tcp);
+            continue;
+        }
 
         /*
         3、解析GET请求的路径，注意跳过空格，找到GET请求的文件，调用send_file发送文件
         */
 
        // TODO
+        int i = 3, j = 0;
+        while (rx_buffer[i] == 0x20) i++;
+        while (rx_buffer[i] != 0x20) url_path[j++] = rx_buffer[i++];
+        url_path[j] = 0;
+        send_file(tcp, url_path);
 
 
         /*
@@ -159,6 +205,7 @@ void http_server_run(void) {
         */
 
        // TODO
+       close_http(tcp);
 
 
         printf("!! final close\n");
